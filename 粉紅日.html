@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飛舞的絲帶：一場溫柔的教學實驗</title>
+    <style>
+        :root {
+            --primary-pink: #F48FB1;
+            --deep-pink: #D81B60;
+            --soft-pink: #FCE4EC;
+            --ribbon-yellow: #FFF59D;
+            --text-dark: #4A4A4A;
+        }
+        body {
+            font-family: "Microsoft JhengHei", "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #FFF0F5;
+            color: var(--text-dark);
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+        .ribbon-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background: linear-gradient(120deg, transparent 40%, rgba(244, 143, 177, 0.15) 40%, rgba(244, 143, 177, 0.15) 60%, transparent 60%);
+            background-size: 200% 200%;
+            animation: bg-shift 15s ease infinite;
+        }
+        .hero {
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            color: var(--deep-pink);
+            text-shadow: 2px 2px 0px #fff;
+        }
+        .hero p {
+            font-size: 1.4rem;
+            max-width: 600px;
+            color: #880E4F;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .scroll-down {
+            margin-top: 50px;
+            font-size: 2rem;
+            animation: bounce 2s infinite;
+            cursor: pointer;
+            color: var(--deep-pink);
+        }
+        .section {
+            padding: 60px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 40px;
+            color: var(--deep-pink);
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .section-title::after {
+            content: '🎀';
+            display: block;
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+        /* 文章卡片 */
+        .article-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 25px rgba(244, 143, 177, 0.15);
+            border-top: 8px solid var(--primary-pink);
+        }
+        .article-card h3 {
+            color: var(--deep-pink);
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            border-bottom: 2px dashed var(--soft-pink);
+            padding-bottom: 10px;
+        }
+        .highlight {
+            background: linear-gradient(120deg, var(--ribbon-yellow) 0%, var(--ribbon-yellow) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 40%;
+            background-position: 0 90%;
+            font-weight: bold;
+        }
+        /* 翻轉卡片 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .flip-card {
+            background-color: transparent;
+            height: 350px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            box-sizing: border-box;
+            border-radius: 15px;
+        }
+        .flip-card-front {
+            background-color: #fff;
+            border: 3px solid var(--soft-pink);
+        }
+        .flip-card-back {
+            background: linear-gradient(135deg, var(--primary-pink), var(--deep-pink));
+            color: white;
+            transform: rotateY(180deg);
+        }
+        .icon { font-size: 3.5rem; margin-bottom: 10px; }
+        .hint { font-size: 0.8rem; color: #999; margin-top: 15px; border: 1px solid #ddd; padding: 2px 8px; border-radius: 10px; }
+
+        /* 相簿設定 (無閃爍特效版) */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+            padding: 10px;
+        }
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            background: #fff;
+            padding: 5px;
+            height: 250px;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            z-index: 10;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            display: block;
+            background-color: #f0f0f0;
+        }
+        .caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            font-size: 0.95rem;
+            text-align: center;
+            color: var(--deep-pink);
+            font-weight: bold;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover .caption {
+            transform: translateY(0);
+        }
+        .quote-box {
+            background: #fff;
+            padding: 30px;
+            border-left: 6px solid var(--ribbon-yellow);
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            font-size: 1.1rem;
+            border-radius: 0 10px 10px 0;
+        }
+        footer {
+            background: #fff;
+            color: var(--text-dark);
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+            border-top: 5px solid var(--primary-pink);
+        }
+        @keyframes bg-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ribbon-bg"></div>
+
+    <div class="hero">
+        <h1>當教室變成了粉紅色</h1>
+        <p>國語文《飛舞的絲帶》x 國際粉紅日<br>看見孩子們如何學會「溫柔、不造成壓力的幫助」</p>
+        <p style="font-size: 0.9rem; margin-top: 20px;">教學設計：林雅欣</p>
+        <div class="scroll-down" onclick="document.getElementById('intro').scrollIntoView({behavior: 'smooth'})">⌄</div>
+    </div>
+
+    <div id="intro" class="section">
+        <h2 class="section-title">教學緣起</h2>
+        <p>我們常教導孩子要「助人」，但有時過度的熱心反而造成對方的壓力。在《飛舞的絲帶》這一課，班長用絲帶巧妙化解了尷尬，這讓我思考：<strong>如何引導孩子學會「有尊嚴的同理」？</strong></p>
+        <div class="quote-box">「溫柔、體貼、不造成壓力的幫助，才是真正的關心。」—— 課堂核心價值</div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">情境思辨</h2>
+        <p style="text-align: center; margin-bottom: 30px; color: #666;">(點擊卡片查看孩子們的溫柔解方)</p>
+        <div class="card-grid">
+            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <div class="icon">🍕</div>
+                        <h3>披薩店的難題</h3>
+                        <p>大家興奮地要點豬肉口味，但你發現一位同學因宗教不能吃豬肉，正一臉苦惱...</p>
+                        <div class="hint">點擊看解法</div>
+                    </div>
+                    <div class="flip-card-back">
+                        <h3>孩子們的決定</h3>
+                        <p>「我們會假裝自己也想吃別的，幫他點沙拉或其他沒豬肉的餐。」</p>
+                        <p>「先私下問店員有沒有無豬肉特餐，不讓他在大家面前尷尬。」</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <div class="icon">🏃</div>
+                        <h3>總是落後的隊友</h3>
+                        <p>大隊接力時，有一位同學不擅長運動，每次都被追過去，他非常失落...</p>
+                        <div class="hint">點擊看解法</div>
+                    </div>
+                    <div class="flip-card-back">
+                        <h3>孩子們的決定</h3>
+                        <p>「跑步的時候牽著他跑，想跟他一起，這樣就不會有人笑他了。」</p>
+                        <p>「大下課陪他一起練習，範圍慢慢變大，讓他練體力。」</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <div class="icon">🗣️</div>
+                        <h3>不敢開口的轉學生</h3>
+                        <p>轉學生中文發音不標準，被幾位同學偷偷嘲笑，讓他越來越不敢開口...</p>
+                        <div class="hint">點擊看解法</div>
+                    </div>
+                    <div class="flip-card-back">
+                        <h3>孩子們的決定</h3>
+                        <p>「我們會去學他以前國家的語言，大家互相學習！」</p>
+                        <p>「送他一本中文書，溫柔地陪他練習，並制止笑他的同學。」</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">課程核心閱讀</h2>
+        <div class="article-card">
+            <h3>📖 粉紅日的故事：勇敢做自己，也支持別人</h3>
+            <div class="article-content">
+                <p>你知道嗎？有一天，一個男同學穿著粉紅色的衣服去上學，卻被別人笑他「像女生」，還有人欺負他。他感到非常難過。</p>
+                <p>可是，學校裡有兩位高年級的大哥哥看到後，決定幫助他。他們想了一個好辦法：<span class="highlight">請大家隔天一起穿上粉紅色的衣服，來支持這位同學。</span></p>
+                <p>結果真的有好多同學一起參加，大家都穿著粉紅色，讓那位被笑的同學感覺到：「我不孤單，有人支持我！」這就是來自加拿大的「國際粉紅日」起源。</p>
+                <p>在台灣，也有許多人響應這個活動，無論是穿上粉紅色，或是像繪本《粉紅色影子的男孩》中的爸爸一樣，陪著喜歡公主裝的兒子一起穿裙子出門。我們學到了：<strong>支持他人不一定要用激烈的手段，溫柔與陪伴，也能產生強大的力量。</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">課堂紀錄</h2>
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="1.jpg" onerror="this.src='1.jpg.jpg'" alt="教師講述">
+                <div class="caption">課程導入：什麼是溫柔的絲帶？</div>
+            </div>
+            <div class="gallery-item">
+                <img src="2.jpg" onerror="this.src='2.jpg.jpg'" alt="學生閱讀平板">
+                <div class="caption">專注閱讀：數位輔助學習</div>
+            </div>
+            <div class="gallery-item">
+                <img src="3.jpg" onerror="this.src='3.jpg.jpg'" alt="師生互動指導">
+                <div class="caption">個別引導：探索粉紅日意涵</div>
+            </div>
+            <div class="gallery-item">
+                <img src="4.jpg" onerror="this.src='4.jpg.jpg'" alt="平板畫記">
+                <div class="caption">關鍵思考：標記重點與想法</div>
+            </div>
+            <div class="gallery-item">
+                <img src="5.jpg" onerror="this.src='5.jpg.jpg'" alt="小組交流">
+                <div class="caption">小組激盪：溫暖的交流時刻</div>
+            </div>
+            <div class="gallery-item">
+                <img src="6.jpg" onerror="this.src='6.jpg.jpg'" alt="同儕對話">
+                <div class="caption">同儕對話：傾聽不一樣的聲音</div>
+            </div>
+            <div class="gallery-item">
+                <img src="7.jpg" onerror="this.src='7.jpg.jpg'" alt="表達想法">
+                <div class="caption">勇敢表達：分享我的看法</div>
+            </div>
+            <div class="gallery-item">
+                <img src="8.jpg" onerror="this.src='8.jpg.jpg'" alt="情境演練">
+                <div class="caption">情境演練：如果我是當事人...</div>
+            </div>
+            <div class="gallery-item">
+                <img src="9.jpg" onerror="this.src='9.jpg.jpg'" alt="上台分享">
+                <div class="caption">成果發表：我們的絲帶宣言</div>
+            </div>
+            <div class="gallery-item">
+                <img src="10.jpg" onerror="this.src='10.jpg.jpg'" alt="師生總結">
+                <div class="caption">師生總結：將溫柔帶入生活</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" style="background-color: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 40px;">
+        <h2 class="section-title">孩子們的改變</h2>
+        <ul style="list-style-type: none; padding: 0;">
+            <li style="margin-bottom: 20px; padding: 15px; border-left: 4px solid var(--primary-pink); background: #fafafa;">
+                <strong>👦 學生回饋：</strong>「我學到幫助別人不一定要很厲害的方法，只要願意就可以。」
+            </li>
+            <li style="margin-bottom: 20px; padding: 15px; border-left: 4px solid var(--primary-pink); background: #fafafa;">
+                <strong>👧 學生回饋：</strong>「雖然我跳不好，但班長用絲帶幫我，我覺得被接納了，很感動。」
+            </li>
+            <li style="padding: 15px; border-left: 4px solid var(--primary-pink); background: #fafafa;">
+                <strong>🧑 學生回饋：</strong>「支持別人的方式不是大聲，而是溫柔。」
+            </li>
+        </ul>
+    </div>
+
+    <footer>
+        <p>© 2025 林雅欣教學檔案 | 康橋國際學校新竹校區</p>
+        <p style="font-size: 0.8rem;">Designed for Digital Learning Master's Program Presentation</p>
+    </footer>
+
+</body>
+</html>
